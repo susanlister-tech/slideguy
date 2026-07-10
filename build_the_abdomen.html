@@ -62,23 +62,17 @@
   .howto-popover[hidden] { display: none; }
   .howto-popover .instructions { font-size: .92rem; line-height: 1.6; }
 
-  .layout {
-    display: grid;
-    gap: 16px;
-    align-items: start;
-    grid-template-columns: minmax(0,1fr) 330px;
-    grid-template-areas:
-      "board side"
-      "info  .";
-  }
-  .board-wrap { grid-area: board; }
-  /* Mode + controls share one column; controls is pushed to the bottom so it
-     lines up with the bottom of the board, with Place this next under the mode card. */
-  .side-col { grid-area: side; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-width: 0; }
+  /* Left column = board + info box (coupled together); right column = mode + controls.
+     Because the info box lives with the board, it stays put under the puzzle no matter
+     how tall the controls column grows. */
+  .layout { display: flex; gap: 16px; align-items: flex-start; }
+  .main-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .side-col { flex: 0 0 330px; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-width: 0; }
   .side-top { display: flex; flex-direction: column; gap: 12px; }
   .side-top .test-current { margin-top: 0; }
   .controls-card h2 { margin-bottom: 12px; }
-  #feedbackBox { grid-area: info; }
+  /* Keep the info box visible under the puzzle while scrolling down to the controls */
+  #feedbackBox { position: sticky; bottom: 16px; }
 
   .board-wrap {
     background: rgba(255,255,255,.94);
@@ -218,12 +212,10 @@
   /* Two columns: board / how-to / info stack on the left, mode + controls on the right */
   /* Single column stack */
   @media(max-width:820px) {
-    .layout {
-      grid-template-columns: 1fr;
-      grid-template-areas: "board" "side" "info";
-    }
+    .layout { flex-direction: column; }
+    .side-col { flex: 1 1 auto; align-self: stretch; justify-content: flex-start; }
     #puzzleSvg { max-height: none; }
-    .side-col { align-self: start; justify-content: flex-start; }
+    #feedbackBox { position: static; }
   }
   @media(max-width:640px) {
     .app { padding: 12px; }
@@ -253,6 +245,7 @@
   </header>
 
   <main class="layout">
+    <div class="main-col">
     <section class="board-wrap" aria-label="Interactive digestive organ puzzle">
       <div id="keyPopover" class="key-popover" role="dialog" aria-label="Organ colour key" hidden>
         <div class="key-popover-head">
@@ -426,6 +419,11 @@
         <g id="confetti" class="confetti"></g>
       </svg>
     </section>
+      <section class="card feedback" id="feedbackBox" aria-live="polite">
+        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
+        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+      </section>
+    </div>
 
     <aside class="side-col">
       <div class="side-top">
@@ -453,11 +451,6 @@
         </div>
       </section>
     </aside>
-
-    <section class="card feedback" id="feedbackBox" aria-live="polite">
-      <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
-      <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
-    </section>
   </main>
 </div>
 
