@@ -70,7 +70,7 @@
     justify-content: center;
   }
   /* Keep the play area from getting so tall it pushes the side panel off-screen */
-  #puzzleSvg { display: block; width: 100%; height: auto; max-height: 78vh; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #puzzleSvg { display: block; width: 100%; height: auto; max-height: 66vh; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
 
   /* Organ key: a small button inside the tray that opens a popover */
   .key-btn { cursor: pointer; }
@@ -108,6 +108,10 @@
   .mode-btn small { display: block; color: #56657b; font-size: .78rem; line-height: 1.4; font-weight: 600; margin-top: 3px; }
 
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .control-card h2 { margin-bottom: 12px; }
+  .control-row { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
+  .control-row .controls { flex: 1 1 440px; grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .control-row .test-current { flex: 1 1 220px; margin-top: 0; display: flex; flex-direction: column; justify-content: center; }
   button {
     border: 0;
     border-radius: 12px;
@@ -198,6 +202,9 @@
     .layout { grid-template-columns: 1fr; }
     .side { grid-template-columns: 1fr 1fr; }
     .side .card:nth-child(n+3) { grid-column: 1 / -1; }
+  }
+  @media(max-width:720px) {
+    .control-row .controls { grid-template-columns: 1fr 1fr; }
   }
   @media(max-width:640px) {
     .app { padding: 12px; }
@@ -397,6 +404,21 @@
         <g id="confetti" class="confetti"></g>
       </svg>
     </section>
+      <section class="card control-card">
+        <h2>Controls</h2>
+        <div class="control-row">
+          <div class="controls" role="group" aria-label="Puzzle controls">
+            <button id="hintBtn" type="button">Show hint</button>
+            <button id="labelsBtn" type="button">Show labels</button>
+            <button id="peelBtn" type="button" aria-pressed="false">Peel top layers</button>
+            <button id="resetBtn" type="button" class="primary">Reset puzzle</button>
+          </div>
+          <div class="test-current" id="testPanel" aria-live="polite">
+            <div class="label">Place this next</div>
+            <div class="value" id="testCurrent">—</div>
+          </div>
+        </div>
+      </section>
       <section class="card feedback" id="feedbackBox" aria-live="polite">
         <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
         <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
@@ -414,19 +436,6 @@
         </div>
       </section>
 
-      <section class="card">
-        <h2>Controls</h2>
-        <div class="controls">
-          <button id="hintBtn">Show hint</button>
-          <button id="labelsBtn">Show labels</button>
-          <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
-          <button id="resetBtn" class="wide primary">Reset puzzle</button>
-        </div>
-        <div class="test-current" id="testPanel" aria-live="polite">
-          <div class="label">Place this next</div>
-          <div class="value" id="testCurrent">—</div>
-        </div>
-      </section>
     </aside>
   </main>
 </div>
