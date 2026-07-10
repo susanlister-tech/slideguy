@@ -57,6 +57,7 @@
   .bar > div { height: 100%; width: 0; background: linear-gradient(90deg,var(--accent),#35a7b5); transition: width .35s ease; }
 
   .layout { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 16px; align-items: start; }
+  .board-col { display: grid; gap: 16px; align-content: start; min-width: 0; }
 
   .board-wrap {
     background: rgba(255,255,255,.94);
@@ -126,21 +127,16 @@
   button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
   .feedback {
-    min-height: 96px;
-    margin-top: 12px;
+    min-height: 128px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background: #f4f8fa;
-    border: 1px solid #e0eaee;
-    border-left: 5px solid #b8c8d0;
-    border-radius: 12px;
-    padding: 11px 13px;
+    border-left: 6px solid #b8c8d0;
   }
   .feedback.good { border-left-color: var(--good); background: #eef7f2; }
   .feedback.bad { border-left-color: var(--bad); background: #fbeff0; }
-  .feedback-title { font-size: 1.02rem; font-weight: 900; margin: 0 0 5px; }
-  .feedback-text { font-size: .9rem; line-height: 1.5; color: #4f5f74; margin: 0; }
+  .feedback-title { font-size: 1.08rem; font-weight: 900; margin: 0 0 6px; }
+  .feedback-text { font-size: .95rem; line-height: 1.55; color: #4f5f74; margin: 0; max-width: 70ch; }
 
   .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: .82rem; color: #4f5f74; }
   .legend span { display: flex; align-items: center; gap: 8px; }
@@ -227,6 +223,7 @@
   </header>
 
   <main class="layout">
+    <div class="board-col">
     <section class="board-wrap" aria-label="Interactive digestive organ puzzle">
       <div id="keyPopover" class="key-popover" role="dialog" aria-label="Organ colour key" hidden>
         <div class="key-popover-head">
@@ -400,6 +397,11 @@
         <g id="confetti" class="confetti"></g>
       </svg>
     </section>
+      <section class="card feedback" id="feedbackBox" aria-live="polite">
+        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
+        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+      </section>
+    </div>
 
     <aside class="side">
       <section class="card">
@@ -423,10 +425,6 @@
         <div class="test-current" id="testPanel" aria-live="polite">
           <div class="label">Place this next</div>
           <div class="value" id="testCurrent">—</div>
-        </div>
-        <div class="feedback" id="feedbackBox" aria-live="polite">
-          <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
-          <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
         </div>
       </section>
     </aside>
