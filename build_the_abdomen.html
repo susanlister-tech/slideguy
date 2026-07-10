@@ -146,7 +146,9 @@
   .target.placed { opacity: 0 !important; pointer-events: none; }
   .target.wrong { animation: targetPulse .4s ease; }
 
-  .piece { cursor: grab; filter: url(#pieceShadow); transition: filter .18s ease; }
+  .piece { cursor: grab; filter: url(#pieceShadow); transition: filter .18s ease, opacity .28s ease; }
+  /* Peel view: fade the superficial organs so placed deep structures show through */
+  #puzzleSvg.peel .piece.superficial.placed { opacity: .14; }
   .piece:active { cursor: grabbing; }
   .piece.selected { filter: url(#selectedGlow); }
   .piece.placed { cursor: default; filter: url(#placedShadow); }
@@ -374,6 +376,7 @@
         <div class="controls">
           <button id="hintBtn">Show hint</button>
           <button id="labelsBtn">Show labels</button>
+          <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
           <button id="resetBtn" class="wide primary">Reset puzzle</button>
         </div>
       </section>
@@ -416,6 +419,7 @@
 
   const hintBtn = document.getElementById('hintBtn');
   const labelsBtn = document.getElementById('labelsBtn');
+  const peelBtn = document.getElementById('peelBtn');
   const resetBtn = document.getElementById('resetBtn');
   const modeGuideBtn = document.getElementById('modeGuide');
   const modeConfidentBtn = document.getElementById('modeConfident');
@@ -452,10 +456,15 @@
   const pieceById = Object.fromEntries(pieces.map(p => [p.dataset.organ, p]));
   const startTransforms = new Map(pieces.map(p => [p.dataset.organ, p.getAttribute('transform')]));
 
+  // Organs from depth 2 up (small intestine, stomach, liver, gallbladder) are the
+  // superficial layer that the Peel view fades to reveal the deep organs behind them.
+  pieces.forEach(p => { if (data[p.dataset.organ].depth >= 2) p.classList.add('superficial'); });
+
   let selected = null;
   let drag = null;
   let placedCount = 0;
   let labelsOn = false;
+  let peelOn = false;
   let mode = 'guide';
   let trayOrder = [...organOrder];
   let testQueue = [];
@@ -783,8 +792,18 @@
     labelsBtn.textContent = labelsOn ? 'Hide labels' : 'Show labels';
   }
 
+  function handlePeelToggle() {
+    peelOn = !peelOn;
+    svg.classList.toggle('peel', peelOn);
+    peelBtn.textContent = peelOn ? 'Show all layers' : 'Peel top layers';
+    peelBtn.setAttribute('aria-pressed', String(peelOn));
+    if (peelOn) setFeedback('Peel view on', 'The liver, stomach, gallbladder and small intestine are faded so the deep organs (kidneys, pancreas, spleen) behind them show through.', '');
+    else setFeedback('Peel view off', 'All layers are shown at full strength again.', '');
+  }
+
   hintBtn.onclick = handleHint;
   labelsBtn.onclick = handleLabelsToggle;
+  peelBtn.onclick = handlePeelToggle;
   resetBtn.onclick = () => { resetPuzzle(); };
   modeGuideBtn.onclick = () => setPuzzleMode('guide');
   modeConfidentBtn.onclick = () => setPuzzleMode('confident');
