@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build the Digestive System — Interactive Organ Puzzle</title>
+<style>
+  :root {
+    --ink: #17233a;
+    --muted: #5d6d86;
+    --panel: #ffffff;
+    --soft: #eef4f7;
+    --accent: #0a7385;
+    --accent2: #d5863b;
+    --good: #197a55;
+    --bad: #b63c43;
+    --focus: #ffd15c;
+    --shadow: 0 16px 38px rgba(20,44,64,.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(10,115,133,.10), transparent 30%),
+      radial-gradient(circle at 90% 4%, rgba(213,134,59,.12), transparent 26%),
+      linear-gradient(180deg,#f7fbfc 0%,#e7f0f3 100%);
+  }
+
+  .app { max-width: 1480px; margin: 0 auto; padding: 22px; }
+
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+
+  h1 { font-size: clamp(1.6rem,3vw,2.5rem); line-height: 1.05; margin: 0; letter-spacing: -.03em; }
+  .subtitle { margin: .55rem 0 0; color: var(--muted); font-size: clamp(.95rem,1.4vw,1.06rem); max-width: 820px; }
+
+  .progress-card {
+    background: rgba(255,255,255,.9);
+    border: 1px solid rgba(23,35,58,.1);
+    border-radius: 18px;
+    padding: 12px 16px;
+    min-width: 230px;
+    box-shadow: 0 8px 24px rgba(20,44,64,.08);
+  }
+  .progress-row { display: flex; justify-content: space-between; font-weight: 800; font-size: .92rem; margin-bottom: 7px; }
+  .bar { height: 10px; background: #dce8ec; border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: linear-gradient(90deg,var(--accent),#35a7b5); transition: width .35s ease; }
+
+  .layout { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 16px; align-items: start; }
+
+  .board-wrap {
+    background: rgba(255,255,255,.94);
+    border: 1px solid rgba(23,35,58,.1);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+  }
+  #puzzleSvg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+  .side { display: grid; gap: 14px; }
+  .card {
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(23,35,58,.1);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 10px 28px rgba(20,44,64,.09);
+  }
+  .card h2 { font-size: 1rem; margin: 0 0 10px; letter-spacing: .01em; }
+  .instructions { font-size: .9rem; line-height: 1.55; color: #4b5a70; margin: 0; }
+  .instructions strong { color: var(--ink); }
+
+  .mode-buttons { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+  .mode-btn { text-align: left; padding: 12px 14px; background: #edf3f5; border: 2px solid transparent; }
+  .mode-btn.active { background: #dff1f4; border-color: rgba(10,115,133,.4); box-shadow: inset 0 0 0 1px rgba(10,115,133,.15); }
+  .mode-btn strong { display: block; font-size: .95rem; }
+  .mode-btn small { display: block; color: #56657b; font-size: .78rem; line-height: 1.4; font-weight: 600; margin-top: 3px; }
+
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button {
+    border: 0;
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 9px 11px;
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    background: #edf3f5;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+  }
+  button:hover { transform: translateY(-1px); box-shadow: 0 7px 16px rgba(20,44,64,.12); }
+  button:focus-visible { outline: 4px solid rgba(255,209,92,.7); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: #fff; }
+  button.wide { grid-column: 1 / -1; }
+  button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .feedback {
+    min-height: 118px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 5px solid #b8c8d0;
+    padding-left: 14px;
+  }
+  .feedback.good { border-color: var(--good); }
+  .feedback.bad { border-color: var(--bad); }
+  .feedback-title { font-size: 1.03rem; font-weight: 900; margin: 0 0 5px; }
+  .feedback-text { font-size: .9rem; line-height: 1.5; color: #4f5f74; margin: 0; }
+
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: .82rem; color: #4f5f74; }
+  .legend span { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 13px; height: 13px; border-radius: 4px; display: inline-block; flex: none; border: 1.5px solid rgba(0,0,0,.35); }
+
+  .source { font-size: .73rem; line-height: 1.45; color: #708097; margin-top: 12px; }
+  .source a { color: var(--accent); font-weight: 700; }
+
+  #testPanel { display: none; }
+  body[data-mode="test"] #testPanel { display: block; }
+  .test-current {
+    background: #eef6f8;
+    border: 1px solid #d2e2e8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 12px;
+  }
+  .test-current .label { font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; color: #607089; font-weight: 800; margin-bottom: 4px; }
+  .test-current .value { font-size: 1.25rem; font-weight: 900; }
+
+  /* Interactive states */
+  .target { transition: opacity .2s ease; }
+  body[data-mode="guide"] .target { opacity: .22; pointer-events: auto; cursor: pointer; }
+  body[data-mode="confident"] .target,
+  body[data-mode="test"] .target { opacity: 0; pointer-events: none; }
+  .target.hint { opacity: .8 !important; filter: url(#glow); }
+  .target.placed { opacity: 0 !important; pointer-events: none; }
+  .target.wrong { animation: targetPulse .4s ease; }
+
+  .piece { cursor: grab; filter: url(#pieceShadow); transition: filter .18s ease; }
+  .piece:active { cursor: grabbing; }
+  .piece.selected { filter: url(#selectedGlow); }
+  .piece.placed { cursor: default; filter: url(#placedShadow); }
+  .piece.wrong { animation: pieceShake .35s ease; }
+
+  .caption { opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+  .caption text {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px; font-weight: 800; fill: #17233a;
+    paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round;
+    text-anchor: middle;
+  }
+  .show-labels .caption[data-placed="true"] { opacity: 1; }
+
+  .tray-panel { fill: #eef4f6; stroke: #cddde2; stroke-width: 2; }
+  .tray-title { font-family:"Segoe UI",Roboto,sans-serif; font-size: 22px; font-weight: 900; fill: #273651; }
+  .tray-subtitle { font-family:"Segoe UI",Roboto,sans-serif; font-size: 14px; fill: #607089; }
+  .stage-label { font-family:"Segoe UI",Roboto,sans-serif; font-size: 13px; font-weight: 800; fill: #607089; letter-spacing: .1em; }
+  .body-oval { fill: url(#bodyGradient); stroke: #d9c4b6; stroke-width: 2; }
+  .confetti { pointer-events: none; }
+
+  @keyframes pieceShake { 0%,100% { transform: translate(0,0); } 25% { transform: translate(-9px,0); } 75% { transform: translate(9px,0); } }
+  @keyframes targetPulse { 0%,100% { opacity: .3; } 50% { opacity: .85; } }
+
+  @media(max-width:980px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { grid-template-columns: 1fr 1fr; }
+    .side .card:nth-child(n+3) { grid-column: 1 / -1; }
+  }
+  @media(max-width:640px) {
+    .app { padding: 12px; }
+    header { grid-template-columns: 1fr; }
+    .progress-card { min-width: 0; }
+    .side { grid-template-columns: 1fr; }
+    .side .card { grid-column: auto; }
+  }
+  @media(prefers-reduced-motion:reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body data-mode="guide">
+<div class="app">
+  <header>
+    <div>
+      <h1>Build the Digestive System</h1>
+      <p class="subtitle">Rebuild the abdominal model by dragging each organ into its correct position. Work at your own level: <strong>Guide me</strong>, <strong>I’m confident</strong>, or <strong>Test me</strong>.</p>
+    </div>
+    <div class="progress-card" aria-live="polite">
+      <div class="progress-row"><span>Organs placed</span><span id="scoreText">0 / 6</span></div>
+      <div class="bar" aria-hidden="true"><div id="progressBar"></div></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-wrap" aria-label="Interactive digestive organ puzzle">
+      <svg id="puzzleSvg" viewBox="0 0 980 760" role="application" aria-label="Drag digestive organ pieces from the tray into their correct positions">
+        <defs>
+          <linearGradient id="bodyGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fbf4ee"/><stop offset="1" stop-color="#f1e4da"/>
+          </linearGradient>
+          <!-- Plastic sheen that sticks to each organ's shape -->
+          <linearGradient id="sheen" x1="0.15" y1="0" x2="0.7" y2="1">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".40"/>
+            <stop offset=".48" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000000" stop-opacity=".14"/>
+          </linearGradient>
+
+          <filter id="pieceShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#13223a" flood-opacity=".30"/></filter>
+          <filter id="placedShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#13223a" flood-opacity=".22"/></filter>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#ffd15c" flood-opacity="1"/></filter>
+          <filter id="selectedGlow" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#0a7385" flood-opacity=".95"/><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#13223a" flood-opacity=".28"/></filter>
+
+          <!-- ===== Organ geometry (traced from the 3D-printed model) ===== -->
+          <!-- Geometry-only paths, reused for coloured fill + sheen so the piece and its ghost target always match -->
+          <path id="geo-liver" d="M-152,-22 C-150,-70 -96,-92 -28,-88 C60,-83 152,-74 150,-24 C149,10 130,42 94,55 C64,67 40,52 8,58 C-22,63 -30,42 -58,60 C-94,82 -152,36 -152,-22 Z"/>
+          <path id="geo-stomach" d="M-8,-70 C48,-78 92,-40 92,20 C92,80 48,116 -10,112 C-66,108 -98,64 -86,20 C-79,-6 -47,-8 -40,18 C-34,40 -14,50 6,38 C24,27 22,-8 -2,-22 C-32,-38 -36,-54 -8,-70 Z"/>
+          <path id="geo-gallbladder" d="M2,-48 C27,-50 41,-23 38,15 C35,49 12,65 -11,61 C-36,57 -44,28 -39,-5 C-34,-31 -21,-46 2,-48 Z"/>
+          <path id="geo-pancreas" d="M112,-4 C122,-26 98,-44 70,-37 C34,-28 -8,-24 -48,-30 C-80,-35 -106,-30 -112,-7 C-117,12 -97,26 -66,23 C-24,20 22,16 60,20 C88,23 102,16 112,-4 Z"/>
+
+          <g id="organ-liver">
+            <use href="#geo-liver" fill="#71714f" stroke="#17130e" stroke-width="7" stroke-linejoin="round"/>
+            <path d="M-6,-84 C-2,-40 -4,10 -8,56" fill="none" stroke="#17130e" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+            <use href="#geo-liver" fill="url(#sheen)"/>
+          </g>
+
+          <g id="organ-stomach">
+            <!-- esophagus tube -->
+            <path d="M-10,-64 C-16,-104 6,-124 20,-152" fill="none" stroke="#17130e" stroke-width="34" stroke-linecap="round"/>
+            <path d="M-10,-64 C-16,-104 6,-124 20,-152" fill="none" stroke="#b83628" stroke-width="24" stroke-linecap="round"/>
+            <use href="#geo-stomach" fill="#c33a2c" stroke="#17130e" stroke-width="7" stroke-linejoin="round"/>
+            <use href="#geo-stomach" fill="url(#sheen)"/>
+          </g>
+
+          <g id="organ-gallbladder">
+            <use href="#geo-gallbladder" fill="#3f7a35" stroke="#17130e" stroke-width="6" stroke-linejoin="round"/>
+            <use href="#geo-gallbladder" fill="url(#sheen)"/>
+          </g>
+
+          <g id="organ-pancreas">
+            <!-- duodenal C-loop at the pancreatic head -->
+            <path d="M104,-8 C138,-16 150,26 118,44 C96,56 74,44 78,24" fill="none" stroke="#17130e" stroke-width="26" stroke-linecap="round"/>
+            <path d="M104,-8 C138,-16 150,26 118,44 C96,56 74,44 78,24" fill="none" stroke="#caa268" stroke-width="16" stroke-linecap="round"/>
+            <use href="#geo-pancreas" fill="#caa268" stroke="#17130e" stroke-width="6" stroke-linejoin="round"/>
+            <use href="#geo-pancreas" fill="url(#sheen)"/>
+          </g>
+
+          <g id="organ-small-intestine">
+            <!-- knotted coil of small intestine -->
+            <path id="geo-smi" d="M-58,-72 C-118,-58 -122,10 -54,6 C6,3 44,-52 -2,-30 C-58,-4 -84,58 -14,58 C56,58 82,-2 34,26 C-30,60 -32,110 26,100 C82,90 96,34 50,60 C-8,92 18,124 66,110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <use href="#geo-smi" stroke="#17130e" stroke-width="42"/>
+            <use href="#geo-smi" stroke="#a63a34" stroke-width="30"/>
+            <use href="#geo-smi" stroke="#c65a52" stroke-width="9" opacity=".55"/>
+          </g>
+
+          <g id="organ-large-intestine">
+            <!-- colon frame: ascending / transverse / descending / sigmoid -->
+            <path id="geo-lgi" d="M-150,150 L-150,-24 C-150,-96 -94,-116 -38,-107 C10,-99 46,-99 94,-107 C152,-116 160,-66 160,4 L160,120 C160,168 110,170 86,198 L74,244" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <use href="#geo-lgi" stroke="#17130e" stroke-width="50"/>
+            <use href="#geo-lgi" stroke="#d5863b" stroke-width="38"/>
+            <!-- cecum / appendix -->
+            <path d="M-150,150 L-150,206" fill="none" stroke="#17130e" stroke-width="22" stroke-linecap="round"/>
+            <path d="M-150,150 L-150,206" fill="none" stroke="#d5863b" stroke-width="12" stroke-linecap="round"/>
+            <!-- haustra segmentation -->
+            <path d="M-172,118 L-128,118 M-172,78 L-128,78 M-172,38 L-128,38 M-172,-2 L-128,-2 M-168,-44 L-120,-30 M-120,-84 L-84,-58 M-70,-100 L-50,-58 M-24,-102 L-16,-58 M22,-102 L30,-58 M70,-100 L82,-58 M118,-88 L92,-46 M164,-30 L120,-18 M182,12 L138,12 M182,54 L138,54 M182,96 L138,96 M168,138 L124,124 M132,172 L92,150 M96,206 L58,196" fill="none" stroke="#17130e" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+          </g>
+        </defs>
+
+        <rect x="0" y="0" width="980" height="760" fill="#f8fbfc"/>
+
+        <!-- assembly area -->
+        <text x="42" y="46" class="stage-label">ASSEMBLE HERE</text>
+        <ellipse class="body-oval" cx="300" cy="400" rx="272" ry="352"/>
+
+        <!-- tray -->
+        <rect x="600" y="24" width="356" height="712" rx="22" class="tray-panel"/>
+        <text x="628" y="64" class="tray-title">Organ tray</text>
+        <text x="628" y="88" class="tray-subtitle">Drag a piece, or Tab + arrow keys</text>
+
+        <!-- Ghost outlines (visible in Guide me) -->
+        <g id="targets">
+          <g class="target" data-target="largeIntestine" transform="translate(295 492) scale(.92)"><use href="#organ-large-intestine"/></g>
+          <g class="target" data-target="smallIntestine" transform="translate(300 520) scale(1)"><use href="#organ-small-intestine"/></g>
+          <g class="target" data-target="pancreas" transform="translate(330 402) scale(1)"><use href="#organ-pancreas"/></g>
+          <g class="target" data-target="stomach" transform="translate(378 250) scale(1)"><use href="#organ-stomach"/></g>
+          <g class="target" data-target="liver" transform="translate(212 245) scale(1)"><use href="#organ-liver"/></g>
+          <g class="target" data-target="gallbladder" transform="translate(238 360) scale(1)"><use href="#organ-gallbladder"/></g>
+        </g>
+
+        <!-- Pieces get appended here as they are placed / dragged -->
+        <g id="pieces">
+          <g class="piece" role="button" tabindex="0" aria-label="Liver puzzle piece" data-organ="liver" transform="translate(700 200) scale(.50)"><use href="#organ-liver"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Stomach puzzle piece" data-organ="stomach" transform="translate(878 200) scale(.50)"><use href="#organ-stomach"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Gallbladder puzzle piece" data-organ="gallbladder" transform="translate(700 400) scale(.85)"><use href="#organ-gallbladder"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Pancreas puzzle piece" data-organ="pancreas" transform="translate(878 400) scale(.52)"><use href="#organ-pancreas"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Small intestine puzzle piece" data-organ="smallIntestine" transform="translate(700 596) scale(.56)"><use href="#organ-small-intestine"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Large intestine puzzle piece" data-organ="largeIntestine" transform="translate(878 596) scale(.50)"><use href="#organ-large-intestine"/></g>
+        </g>
+
+        <!-- Captions (Show labels) -->
+        <g id="captions">
+          <g class="caption" data-label="liver"><text x="150" y="180">Liver</text></g>
+          <g class="caption" data-label="stomach"><text x="430" y="150">Stomach</text></g>
+          <g class="caption" data-label="gallbladder"><text x="196" y="392">Gallbladder</text></g>
+          <g class="caption" data-label="pancreas"><text x="372" y="352">Pancreas</text></g>
+          <g class="caption" data-label="smallIntestine"><text x="300" y="500">Small intestine</text></g>
+          <g class="caption" data-label="largeIntestine"><text x="300" y="704">Large intestine</text></g>
+        </g>
+
+        <g id="confetti" class="confetti"></g>
+      </svg>
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <h2>How to play</h2>
+        <p class="instructions"><strong>Mouse or touch:</strong> drag a piece into the body outline.<br><strong>Click method:</strong> select a piece, then (in Guide me) click its matching outline.<br><strong>Keyboard:</strong> Tab to a piece, arrow keys to move (hold Shift for bigger steps), Enter to drop.</p>
+        <div class="mode-buttons" role="group" aria-label="Puzzle mode">
+          <button id="modeGuide" class="mode-btn active" type="button"><strong>Guide me</strong><small>Outlines stay visible and the Hint button glows the correct spot.</small></button>
+          <button id="modeConfident" class="mode-btn" type="button"><strong>I’m confident</strong><small>No outlines. Place every organ from memory.</small></button>
+          <button id="modeTest" class="mode-btn" type="button"><strong>Test me</strong><small>No outlines. Place the named organ; wrong picks go to the back of the tray.</small></button>
+        </div>
+        <div class="test-current" id="testPanel" aria-live="polite">
+          <div class="label">Place this next</div>
+          <div class="value" id="testCurrent">—</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+          <button id="hintBtn">Show hint</button>
+          <button id="labelsBtn">Show labels</button>
+          <button id="resetBtn" class="wide primary">Reset puzzle</button>
+        </div>
+      </section>
+
+      <section class="card feedback" id="feedbackBox" aria-live="polite">
+        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
+        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+      </section>
+
+      <section class="card">
+        <h2>Organ key</h2>
+        <div class="legend">
+          <span><i class="dot" style="background:#71714f"></i>Liver</span>
+          <span><i class="dot" style="background:#c33a2c"></i>Stomach</span>
+          <span><i class="dot" style="background:#3f7a35"></i>Gallbladder</span>
+          <span><i class="dot" style="background:#caa268"></i>Pancreas</span>
+          <span><i class="dot" style="background:#a63a34"></i>Small intestine</span>
+          <span><i class="dot" style="background:#d5863b"></i>Large intestine</span>
+        </div>
+        <p class="source">Educational adaptation of a 3D-printed plastic anatomy model of the abdominal digestive organs.</p>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<script>
+(() => {
+  const svg = document.getElementById('puzzleSvg');
+  const pieceGroup = document.getElementById('pieces');
+  const pieces = [...svg.querySelectorAll('.piece')];
+  const targets = [...svg.querySelectorAll('.target')];
+  const scoreText = document.getElementById('scoreText');
+  const progressBar = document.getElementById('progressBar');
+  const feedbackBox = document.getElementById('feedbackBox');
+  const feedbackTitle = document.getElementById('feedbackTitle');
+  const feedbackText = document.getElementById('feedbackText');
+
+  const hintBtn = document.getElementById('hintBtn');
+  const labelsBtn = document.getElementById('labelsBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const modeGuideBtn = document.getElementById('modeGuide');
+  const modeConfidentBtn = document.getElementById('modeConfident');
+  const modeTestBtn = document.getElementById('modeTest');
+  const testCurrent = document.getElementById('testCurrent');
+
+  // Organ metadata: home position (matches ghost target transforms), snap tolerance, adult-level facts.
+  const data = {
+    liver:          {name:'Liver',           x:212, y:245, scale:1,   threshold:95,  fact:'Fills the upper-right abdomen. It filters blood, makes bile, stores glycogen, and processes nutrients, hormones and drugs.'},
+    stomach:        {name:'Stomach',         x:378, y:250, scale:1,   threshold:90,  fact:'Sits in the upper-left abdomen. Its muscular wall churns food with acid and enzymes into a paste (chyme) before releasing it into the small intestine.'},
+    gallbladder:    {name:'Gallbladder',     x:238, y:360, scale:1,   threshold:60,  fact:'A small sac tucked under the liver. It stores and concentrates bile, then squeezes it into the duodenum to help digest fats.'},
+    pancreas:       {name:'Pancreas',        x:330, y:402, scale:1,   threshold:90,  fact:'Lies behind the stomach. It secretes digestive enzymes into the duodenum and releases insulin and glucagon to regulate blood sugar.'},
+    smallIntestine: {name:'Small intestine', x:300, y:520, scale:1,   threshold:95,  fact:'Roughly six metres of coiled tube (duodenum, jejunum, ileum) where most nutrient absorption takes place.'},
+    largeIntestine: {name:'Large intestine', x:295, y:492, scale:.92, threshold:105, fact:'Frames the small intestine. It absorbs water and electrolytes, houses gut bacteria, and forms and stores faeces.'}
+  };
+
+  // Anatomical stacking order (back to front) so placed organs overlap realistically.
+  const zOrder = ['largeIntestine','smallIntestine','pancreas','stomach','liver','gallbladder'];
+
+  const organOrder = pieces.map(p => p.dataset.organ);
+  const pieceById = Object.fromEntries(pieces.map(p => [p.dataset.organ, p]));
+  const startTransforms = new Map(pieces.map(p => [p.dataset.organ, p.getAttribute('transform')]));
+
+  let selected = null;
+  let drag = null;
+  let placedCount = 0;
+  let labelsOn = false;
+  let mode = 'guide';
+  let trayOrder = [...organOrder];
+  let testQueue = [];
+  let testIndex = 0;
+
+  function pointInSvg(event) {
+    const pt = svg.createSVGPoint();
+    pt.x = event.clientX; pt.y = event.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+  function parseTransformText(text) {
+    const m = text.match(/translate\(([-\d.]+)[ ,]([-\d.]+)\)\s*scale\(([-\d.]+)\)/);
+    return {x:+m[1], y:+m[2], s:+m[3]};
+  }
+  function parseTransform(el) { return parseTransformText(el.getAttribute('transform')); }
+  function setTransform(el, x, y, s) { el.setAttribute('transform', `translate(${x} ${y}) scale(${s})`); }
+
+  function setFeedback(title, text, type = '') {
+    feedbackTitle.textContent = title;
+    feedbackText.textContent = text;
+    feedbackBox.classList.remove('good','bad');
+    if (type) feedbackBox.classList.add(type);
+  }
+  function targetFor(id) { return targets.find(t => t.dataset.target === id); }
+  function currentTestId() { return testQueue[testIndex] || null; }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function updateScore() {
+    scoreText.textContent = `${placedCount} / ${pieces.length}`;
+    progressBar.style.width = `${(placedCount / pieces.length) * 100}%`;
+  }
+
+  function updateTestPanel() {
+    if (mode !== 'test') return;
+    testCurrent.textContent = testIndex >= testQueue.length ? 'All done!' : data[currentTestId()].name;
+  }
+
+  // Re-flow tray pieces into two tidy columns as organs leave the tray.
+  function layoutTray() {
+    const active = trayOrder.filter(id => !pieceById[id].classList.contains('placed'));
+    const cols = [700, 878];
+    const rows = [200, 400, 596];
+    active.forEach((id, i) => {
+      const piece = pieceById[id];
+      const home = parseTransformText(startTransforms.get(id));
+      setTransform(piece, cols[i % 2], rows[Math.floor(i / 2)], home.s);
+    });
+  }
+
+  function movePieceToBackOfTray(id) {
+    trayOrder = trayOrder.filter(v => v !== id);
+    trayOrder.push(id);
+    const piece = pieceById[id];
+    if (piece && piece.parentNode === pieceGroup) pieceGroup.appendChild(piece);
+    layoutTray();
+  }
+
+  // Keep placed organs in anatomical stacking order.
+  function restack() {
+    zOrder.forEach(id => {
+      const piece = pieceById[id];
+      if (piece.classList.contains('placed')) pieceGroup.insertBefore(piece, pieceGroup.firstChild);
+    });
+  }
+
+  function clearSelection() {
+    pieces.forEach(p => p.classList.remove('selected'));
+    selected = null;
+  }
+
+  function selectPiece(piece) {
+    if (piece.classList.contains('placed')) return;
+    if (mode === 'test' && piece.dataset.organ !== currentTestId()) {
+      movePieceToBackOfTray(piece.dataset.organ);
+      setFeedback('Not that organ yet', `Test me is asking for the ${data[currentTestId()].name.toLowerCase()}. That piece went to the back of the tray.`, 'bad');
+      clearSelection();
+      return;
+    }
+    clearSelection();
+    selected = piece;
+    piece.classList.add('selected');
+    const d = data[piece.dataset.organ];
+    const extra = mode === 'guide'
+      ? 'Now drag it into place, or click its matching outline.'
+      : 'Now drag it into place.';
+    setFeedback(`Selected: ${d.name}`, extra, '');
+  }
+
+  function markPlacedLabel(id, placed) {
+    const label = svg.querySelector(`.caption[data-label="${id}"]`);
+    if (!label) return;
+    if (placed) label.dataset.placed = 'true'; else delete label.dataset.placed;
+  }
+
+  function placePiece(piece) {
+    const id = piece.dataset.organ;
+    const d = data[id];
+    setTransform(piece, d.x, d.y, d.scale);
+    piece.classList.remove('selected','wrong');
+    piece.classList.add('placed');
+    piece.setAttribute('aria-label', `${d.name}, correctly placed`);
+    piece.setAttribute('tabindex', '-1');
+
+    targetFor(id).classList.add('placed');
+    markPlacedLabel(id, true);
+    trayOrder = trayOrder.filter(v => v !== id);
+    placedCount++;
+    restack();
+    layoutTray();
+    updateScore();
+    setFeedback(`Correct — ${d.name}`, d.fact, 'good');
+    clearSelection();
+
+    if (mode === 'test') { testIndex++; updateTestPanel(); }
+    if (placedCount === pieces.length) completePuzzle();
+  }
+
+  function resetWrongAnimation(el) {
+    el.classList.remove('wrong');
+    void el.getBBox();
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 450);
+  }
+
+  function returnPieceToTray(piece, moveToBack = false) {
+    const id = piece.dataset.organ;
+    piece.classList.remove('selected');
+    if (moveToBack) {
+      movePieceToBackOfTray(id);
+    } else {
+      if (!trayOrder.includes(id)) trayOrder.push(id);
+      layoutTray();
+    }
+    if (selected === piece) selected = null;
+  }
+
+  function wrongPlacement(piece, explicitTarget = null) {
+    const d = data[piece.dataset.organ];
+    resetWrongAnimation(piece);
+    if (explicitTarget) resetWrongAnimation(explicitTarget);
+    returnPieceToTray(piece, mode === 'test');
+    setFeedback(`Not quite — ${d.name}`, 'That spot isn’t right. The piece is back in the tray — try again.', 'bad');
+  }
+
+  function checkPiece(piece) {
+    const id = piece.dataset.organ;
+    if (mode === 'test' && id !== currentTestId()) {
+      movePieceToBackOfTray(id);
+      setFeedback('Not that organ yet', `Test me is asking for the ${data[currentTestId()].name.toLowerCase()}. That piece went to the back of the tray.`, 'bad');
+      clearSelection();
+      return;
+    }
+    const d = data[id];
+    const p = parseTransform(piece);
+    const dist = Math.hypot(p.x - d.x, p.y - d.y);
+    if (dist <= d.threshold) placePiece(piece); else wrongPlacement(piece);
+  }
+
+  function launchConfetti() {
+    const g = document.getElementById('confetti');
+    const palette = ['#0a7385','#d5863b','#197a55','#c33a2c','#71714f','#ffd15c'];
+    for (let i = 0; i < 80; i++) {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      const x = 40 + Math.random() * 520, y = 8 + Math.random() * 60;
+      c.setAttribute('x', x); c.setAttribute('y', y);
+      c.setAttribute('width', 5 + Math.random() * 9);
+      c.setAttribute('height', 8 + Math.random() * 12);
+      c.setAttribute('rx', 2);
+      c.setAttribute('fill', palette[i % palette.length]);
+      c.setAttribute('transform', `rotate(${Math.random()*180} ${x} ${y})`);
+      g.appendChild(c);
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${(Math.random()-.5)*220}px, ${560+Math.random()*160}px) rotate(${360+Math.random()*720}deg)`, opacity: 0 }
+      ], { duration: 1600 + Math.random()*1300, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' }).onfinish = () => c.remove();
+    }
+  }
+
+  function completePuzzle() {
+    if (mode === 'test') updateTestPanel();
+    const msg = mode === 'test'
+      ? 'Every organ placed correctly from memory — excellent recall!'
+      : 'You rebuilt the digestive system and placed every organ correctly.';
+    setFeedback('Puzzle complete!', msg, 'good');
+    launchConfetti();
+  }
+
+  function updateModeButtons() {
+    modeGuideBtn.classList.toggle('active', mode === 'guide');
+    modeConfidentBtn.classList.toggle('active', mode === 'confident');
+    modeTestBtn.classList.toggle('active', mode === 'test');
+    document.body.dataset.mode = mode;
+    hintBtn.disabled = mode !== 'guide';
+  }
+
+  function setPuzzleMode(nextMode) {
+    mode = nextMode;
+    updateModeButtons();
+    resetPuzzle();
+    if (mode === 'guide') setFeedback('Guide me', 'Outlines are visible. Use Show hint to glow the correct spot for the next organ.', '');
+    else if (mode === 'confident') setFeedback('I’m confident', 'No outlines shown — place each organ from memory.', '');
+    else setFeedback('Test me', 'Place only the organ named in the panel. Wrong picks go to the back of the tray.', '');
+  }
+
+  function resetPuzzle() {
+    placedCount = 0;
+    drag = null;
+    clearSelection();
+    trayOrder = [...organOrder];
+    testQueue = shuffle(organOrder);
+    testIndex = 0;
+
+    pieces.forEach(piece => {
+      const id = piece.dataset.organ;
+      piece.setAttribute('transform', startTransforms.get(id));
+      piece.classList.remove('placed','selected','wrong');
+      piece.setAttribute('tabindex', '0');
+      piece.setAttribute('aria-label', `${data[id].name} puzzle piece`);
+      markPlacedLabel(id, false);
+      pieceGroup.appendChild(piece);
+    });
+
+    targets.forEach(t => t.classList.remove('placed','hint','wrong'));
+    updateScore();
+    layoutTray();
+    updateTestPanel();
+
+    if (mode === 'guide') setFeedback('Ready to build?', 'Guide me is active. Outlines are visible and Show hint is available.', '');
+    else if (mode === 'confident') setFeedback('Ready to build?', 'I’m confident is active. No outlines are shown.', '');
+    else setFeedback('Ready to build?', 'Test me is active. Place the organ named in the panel.', '');
+  }
+
+  function handleHint() {
+    if (mode !== 'guide') return;
+    let piece = selected && !selected.classList.contains('placed')
+      ? selected
+      : pieces.find(p => !p.classList.contains('placed'));
+    if (!piece) { setFeedback('All done', 'Every organ is already in place.', 'good'); return; }
+    selectPiece(piece);
+    const target = targetFor(piece.dataset.organ);
+    target.classList.add('hint');
+    setFeedback(`Hint: ${data[piece.dataset.organ].name}`, 'The glowing outline shows where this organ belongs.', '');
+    setTimeout(() => target.classList.remove('hint'), 1600);
+  }
+
+  function handleLabelsToggle() {
+    labelsOn = !labelsOn;
+    svg.classList.toggle('show-labels', labelsOn);
+    labelsBtn.textContent = labelsOn ? 'Hide labels' : 'Show labels';
+  }
+
+  hintBtn.onclick = handleHint;
+  labelsBtn.onclick = handleLabelsToggle;
+  resetBtn.onclick = () => { resetPuzzle(); };
+  modeGuideBtn.onclick = () => setPuzzleMode('guide');
+  modeConfidentBtn.onclick = () => setPuzzleMode('confident');
+  modeTestBtn.onclick = () => setPuzzleMode('test');
+
+  pieces.forEach(piece => {
+    piece.addEventListener('pointerdown', e => {
+      if (piece.classList.contains('placed')) return;
+      if (mode === 'test' && piece.dataset.organ !== currentTestId()) {
+        e.preventDefault();
+        movePieceToBackOfTray(piece.dataset.organ);
+        setFeedback('Not that organ yet', `Test me is asking for the ${data[currentTestId()].name.toLowerCase()}. That piece went to the back of the tray.`, 'bad');
+        clearSelection();
+        return;
+      }
+      e.preventDefault();
+      selectPiece(piece);
+      pieceGroup.appendChild(piece); // dragged piece on top
+      const pt = pointInSvg(e);
+      const t = parseTransform(piece);
+      drag = {piece, id:e.pointerId, dx:pt.x - t.x, dy:pt.y - t.y, s:t.s, startX:pt.x, startY:pt.y, moved:false};
+      piece.setPointerCapture(e.pointerId);
+    });
+
+    piece.addEventListener('pointermove', e => {
+      if (!drag || drag.piece !== piece || drag.id !== e.pointerId) return;
+      const pt = pointInSvg(e);
+      if (Math.hypot(pt.x - drag.startX, pt.y - drag.startY) > 4) drag.moved = true;
+      setTransform(piece, pt.x - drag.dx, pt.y - drag.dy, drag.s);
+    });
+
+    piece.addEventListener('pointerup', e => {
+      if (!drag || drag.piece !== piece || drag.id !== e.pointerId) return;
+      try { piece.releasePointerCapture(e.pointerId); } catch(err) {}
+      const wasMoved = drag.moved;
+      drag = null;
+      if (wasMoved) checkPiece(piece); else restack();
+    });
+
+    piece.addEventListener('click', () => {
+      if (!drag && !piece.classList.contains('placed')) selectPiece(piece);
+    });
+
+    piece.addEventListener('keydown', e => {
+      if (piece.classList.contains('placed')) return;
+      if (mode === 'test' && piece.dataset.organ !== currentTestId() &&
+          ['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        movePieceToBackOfTray(piece.dataset.organ);
+        setFeedback('Not that organ yet', `Test me is asking for the ${data[currentTestId()].name.toLowerCase()}. That piece went to the back of the tray.`, 'bad');
+        clearSelection();
+        return;
+      }
+      const p = parseTransform(piece);
+      const step = e.shiftKey ? 25 : 10;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(e.key)) e.preventDefault();
+      if (e.key === 'ArrowUp') setTransform(piece, p.x, p.y - step, p.s);
+      else if (e.key === 'ArrowDown') setTransform(piece, p.x, p.y + step, p.s);
+      else if (e.key === 'ArrowLeft') setTransform(piece, p.x - step, p.y, p.s);
+      else if (e.key === 'ArrowRight') setTransform(piece, p.x + step, p.y, p.s);
+      else if (e.key === 'Enter') checkPiece(piece);
+      else if (e.key === ' ') selectPiece(piece);
+    });
+  });
+
+  targets.forEach(target => {
+    target.addEventListener('click', () => {
+      if (mode !== 'guide') return;
+      if (!selected) {
+        setFeedback('Select an organ first', 'Choose a piece from the tray, then click its matching outline.', '');
+        return;
+      }
+      if (selected.dataset.organ === target.dataset.target) placePiece(selected);
+      else wrongPlacement(selected, target);
+    });
+  });
+
+  updateModeButtons();
+  resetPuzzle();
+})();
+</script>
+</body>
+</html>
