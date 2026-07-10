@@ -150,6 +150,7 @@
   .piece:active { cursor: grabbing; }
   .piece.selected { filter: url(#selectedGlow); }
   .piece.placed { cursor: default; filter: url(#placedShadow); }
+  body:not([data-mode="test"]) .piece.placed { cursor: pointer; }
   .piece.wrong { animation: pieceShake .35s ease; }
 
   .caption { opacity: 0; transition: opacity .2s ease; pointer-events: none; }
@@ -194,7 +195,7 @@
       <p class="subtitle">Rebuild the abdominal model by dragging each organ into its correct position. Work at your own level: <strong>Guide me</strong>, <strong>I’m confident</strong>, or <strong>Test me</strong>.</p>
     </div>
     <div class="progress-card" aria-live="polite">
-      <div class="progress-row"><span>Organs placed</span><span id="scoreText">0 / 6</span></div>
+      <div class="progress-row"><span>Organs placed</span><span id="scoreText">0 / 8</span></div>
       <div class="bar" aria-hidden="true"><div id="progressBar"></div></div>
     </div>
   </header>
@@ -271,6 +272,34 @@
             <!-- haustra segmentation -->
             <path d="M-172,118 L-128,118 M-172,78 L-128,78 M-172,38 L-128,38 M-172,-2 L-128,-2 M-168,-44 L-120,-30 M-120,-84 L-84,-58 M-70,-100 L-50,-58 M-24,-102 L-16,-58 M22,-102 L30,-58 M70,-100 L82,-58 M118,-88 L92,-46 M164,-30 L120,-18 M182,12 L138,12 M182,54 L138,54 M182,96 L138,96 M168,138 L124,124 M132,172 L92,150 M96,206 L58,196" fill="none" stroke="#17130e" stroke-width="4" stroke-linecap="round" opacity=".85"/>
           </g>
+
+          <path id="geo-kidney-l" d="M-95,-68 C-131,-68 -142,-30 -140,6 C-138,44 -124,72 -95,72 C-66,72 -52,44 -52,4 C-52,-32 -59,-68 -95,-68 Z"/>
+          <path id="geo-kidney-r" d="M95,-68 C131,-68 142,-30 140,6 C138,44 124,72 95,72 C66,72 52,44 52,4 C52,-32 59,-68 95,-68 Z"/>
+          <path id="geo-spleen" d="M-6,-72 C40,-80 68,-40 66,8 C64,54 38,86 -8,80 C-46,75 -66,40 -62,-6 C-59,-40 -44,-64 -6,-72 Z"/>
+
+          <g id="organ-kidneys">
+            <!-- adrenal (suprarenal) glands -->
+            <path d="M-116,-68 C-108,-84 -82,-84 -76,-70 C-84,-62 -108,-62 -116,-68 Z" fill="#d6bd7c" stroke="#17130e" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M116,-68 C108,-84 82,-84 76,-70 C84,-62 108,-62 116,-68 Z" fill="#d6bd7c" stroke="#17130e" stroke-width="4" stroke-linejoin="round"/>
+            <!-- renal vessels toward the midline great vessels -->
+            <path d="M-52,2 L-14,10" stroke="#b23a2c" stroke-width="7" stroke-linecap="round"/>
+            <path d="M-52,12 L-14,22" stroke="#3a4d86" stroke-width="7" stroke-linecap="round"/>
+            <path d="M52,2 L14,10" stroke="#b23a2c" stroke-width="7" stroke-linecap="round"/>
+            <path d="M52,12 L14,22" stroke="#3a4d86" stroke-width="7" stroke-linecap="round"/>
+            <use href="#geo-kidney-l" fill="#74483b" stroke="#17130e" stroke-width="7" stroke-linejoin="round"/>
+            <use href="#geo-kidney-r" fill="#74483b" stroke="#17130e" stroke-width="7" stroke-linejoin="round"/>
+            <path d="M-56,2 C-64,-2 -64,10 -56,8" fill="none" stroke="#17130e" stroke-width="5" stroke-linecap="round"/>
+            <path d="M56,2 C64,-2 64,10 56,8" fill="none" stroke="#17130e" stroke-width="5" stroke-linecap="round"/>
+            <use href="#geo-kidney-l" fill="url(#sheen)"/>
+            <use href="#geo-kidney-r" fill="url(#sheen)"/>
+          </g>
+
+          <g id="organ-spleen">
+            <use href="#geo-spleen" fill="#5e3c58" stroke="#17130e" stroke-width="7" stroke-linejoin="round"/>
+            <!-- splenic notches on the superior border -->
+            <path d="M-6,-72 l10,14 M22,-64 l8,14" fill="none" stroke="#17130e" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+            <use href="#geo-spleen" fill="url(#sheen)"/>
+          </g>
         </defs>
 
         <rect x="0" y="0" width="980" height="760" fill="#f8fbfc"/>
@@ -284,28 +313,35 @@
         <text x="628" y="64" class="tray-title">Organ tray</text>
         <text x="628" y="88" class="tray-subtitle">Drag a piece, or Tab + arrow keys</text>
 
-        <!-- Ghost outlines (visible in Guide me) -->
+        <!-- Ghost outlines (visible in Guide me). Deep organs are placed last here so their
+             faint outline stays clickable on top of the superficial organs that cover them. -->
         <g id="targets">
           <g class="target" data-target="largeIntestine" transform="translate(295 492) scale(.92)"><use href="#organ-large-intestine"/></g>
           <g class="target" data-target="smallIntestine" transform="translate(300 520) scale(1)"><use href="#organ-small-intestine"/></g>
-          <g class="target" data-target="pancreas" transform="translate(330 402) scale(1)"><use href="#organ-pancreas"/></g>
-          <g class="target" data-target="stomach" transform="translate(378 250) scale(1)"><use href="#organ-stomach"/></g>
           <g class="target" data-target="liver" transform="translate(212 245) scale(1)"><use href="#organ-liver"/></g>
+          <g class="target" data-target="stomach" transform="translate(378 250) scale(1)"><use href="#organ-stomach"/></g>
           <g class="target" data-target="gallbladder" transform="translate(238 360) scale(1)"><use href="#organ-gallbladder"/></g>
+          <g class="target" data-target="spleen" transform="translate(470 235) scale(.8)"><use href="#organ-spleen"/></g>
+          <g class="target" data-target="pancreas" transform="translate(330 402) scale(1)"><use href="#organ-pancreas"/></g>
+          <g class="target" data-target="kidneys" transform="translate(300 350) scale(1)"><use href="#organ-kidneys"/></g>
         </g>
 
         <!-- Pieces get appended here as they are placed / dragged -->
         <g id="pieces">
-          <g class="piece" role="button" tabindex="0" aria-label="Liver puzzle piece" data-organ="liver" transform="translate(700 200) scale(.50)"><use href="#organ-liver"/></g>
-          <g class="piece" role="button" tabindex="0" aria-label="Stomach puzzle piece" data-organ="stomach" transform="translate(878 200) scale(.50)"><use href="#organ-stomach"/></g>
-          <g class="piece" role="button" tabindex="0" aria-label="Gallbladder puzzle piece" data-organ="gallbladder" transform="translate(700 400) scale(.85)"><use href="#organ-gallbladder"/></g>
-          <g class="piece" role="button" tabindex="0" aria-label="Pancreas puzzle piece" data-organ="pancreas" transform="translate(878 400) scale(.52)"><use href="#organ-pancreas"/></g>
-          <g class="piece" role="button" tabindex="0" aria-label="Small intestine puzzle piece" data-organ="smallIntestine" transform="translate(700 596) scale(.56)"><use href="#organ-small-intestine"/></g>
-          <g class="piece" role="button" tabindex="0" aria-label="Large intestine puzzle piece" data-organ="largeIntestine" transform="translate(878 596) scale(.50)"><use href="#organ-large-intestine"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Kidneys puzzle piece" data-organ="kidneys" transform="translate(700 150) scale(.50)"><use href="#organ-kidneys"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Spleen puzzle piece" data-organ="spleen" transform="translate(878 150) scale(.70)"><use href="#organ-spleen"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Liver puzzle piece" data-organ="liver" transform="translate(700 310) scale(.48)"><use href="#organ-liver"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Stomach puzzle piece" data-organ="stomach" transform="translate(878 310) scale(.48)"><use href="#organ-stomach"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Gallbladder puzzle piece" data-organ="gallbladder" transform="translate(700 470) scale(.80)"><use href="#organ-gallbladder"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Pancreas puzzle piece" data-organ="pancreas" transform="translate(878 470) scale(.50)"><use href="#organ-pancreas"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Small intestine puzzle piece" data-organ="smallIntestine" transform="translate(700 630) scale(.54)"><use href="#organ-small-intestine"/></g>
+          <g class="piece" role="button" tabindex="0" aria-label="Large intestine puzzle piece" data-organ="largeIntestine" transform="translate(878 630) scale(.46)"><use href="#organ-large-intestine"/></g>
         </g>
 
         <!-- Captions (Show labels) -->
         <g id="captions">
+          <g class="caption" data-label="kidneys"><text x="168" y="300">Kidneys</text></g>
+          <g class="caption" data-label="spleen"><text x="486" y="196">Spleen</text></g>
           <g class="caption" data-label="liver"><text x="150" y="180">Liver</text></g>
           <g class="caption" data-label="stomach"><text x="430" y="150">Stomach</text></g>
           <g class="caption" data-label="gallbladder"><text x="196" y="392">Gallbladder</text></g>
@@ -321,7 +357,7 @@
     <aside class="side">
       <section class="card">
         <h2>How to play</h2>
-        <p class="instructions"><strong>Mouse or touch:</strong> drag a piece into the body outline.<br><strong>Click method:</strong> select a piece, then (in Guide me) click its matching outline.<br><strong>Keyboard:</strong> Tab to a piece, arrow keys to move (hold Shift for bigger steps), Enter to drop.</p>
+        <p class="instructions"><strong>Mouse or touch:</strong> drag a piece into the body outline.<br><strong>Click method:</strong> select a piece, then (in Guide me) click its matching outline.<br><strong>Keyboard:</strong> Tab to a piece, arrow keys to move (hold Shift for bigger steps), Enter to drop.<br><strong>Layers:</strong> deep organs (kidneys, pancreas) sit behind others — place them <em>before</em> the organs that cover them. Click a placed organ (or press Delete) to take it back out.</p>
         <div class="mode-buttons" role="group" aria-label="Puzzle mode">
           <button id="modeGuide" class="mode-btn active" type="button"><strong>Guide me</strong><small>Outlines stay visible and the Hint button glows the correct spot.</small></button>
           <button id="modeConfident" class="mode-btn" type="button"><strong>I’m confident</strong><small>No outlines. Place every organ from memory.</small></button>
@@ -354,6 +390,8 @@
           <span><i class="dot" style="background:#c33a2c"></i>Stomach</span>
           <span><i class="dot" style="background:#3f7a35"></i>Gallbladder</span>
           <span><i class="dot" style="background:#caa268"></i>Pancreas</span>
+          <span><i class="dot" style="background:#5e3c58"></i>Spleen</span>
+          <span><i class="dot" style="background:#74483b"></i>Kidneys</span>
           <span><i class="dot" style="background:#a63a34"></i>Small intestine</span>
           <span><i class="dot" style="background:#d5863b"></i>Large intestine</span>
         </div>
@@ -367,6 +405,7 @@
 (() => {
   const svg = document.getElementById('puzzleSvg');
   const pieceGroup = document.getElementById('pieces');
+  const targetGroup = document.getElementById('targets');
   const pieces = [...svg.querySelectorAll('.piece')];
   const targets = [...svg.querySelectorAll('.target')];
   const scoreText = document.getElementById('scoreText');
@@ -384,17 +423,30 @@
   const testCurrent = document.getElementById('testCurrent');
 
   // Organ metadata: home position (matches ghost target transforms), snap tolerance, adult-level facts.
+  // depth   = anatomical layer, 0 = deepest (posterior/retroperitoneal) ... higher = more superficial.
+  // coveredBy = organs that lie in front of this one; while any of them is placed, this organ
+  //             cannot be dropped and the student is asked to remove the covering organ first.
   const data = {
-    liver:          {name:'Liver',           x:212, y:245, scale:1,   threshold:95,  fact:'Fills the upper-right abdomen. It filters blood, makes bile, stores glycogen, and processes nutrients, hormones and drugs.'},
-    stomach:        {name:'Stomach',         x:378, y:250, scale:1,   threshold:90,  fact:'Sits in the upper-left abdomen. Its muscular wall churns food with acid and enzymes into a paste (chyme) before releasing it into the small intestine.'},
-    gallbladder:    {name:'Gallbladder',     x:238, y:360, scale:1,   threshold:60,  fact:'A small sac tucked under the liver. It stores and concentrates bile, then squeezes it into the duodenum to help digest fats.'},
-    pancreas:       {name:'Pancreas',        x:330, y:402, scale:1,   threshold:90,  fact:'Lies behind the stomach. It secretes digestive enzymes into the duodenum and releases insulin and glucagon to regulate blood sugar.'},
-    smallIntestine: {name:'Small intestine', x:300, y:520, scale:1,   threshold:95,  fact:'Roughly six metres of coiled tube (duodenum, jejunum, ileum) where most nutrient absorption takes place.'},
-    largeIntestine: {name:'Large intestine', x:295, y:492, scale:.92, threshold:105, fact:'Frames the small intestine. It absorbs water and electrolytes, houses gut bacteria, and forms and stores faeces.'}
+    kidneys:        {name:'Kidneys',         x:300, y:350, scale:1,   threshold:100, depth:0, coveredBy:['liver','stomach'],
+                     fact:'Retroperitoneal — they lie against the back wall, one either side of the spine, behind the liver and stomach. They filter blood to make urine and regulate fluid, salts and blood pressure.'},
+    pancreas:       {name:'Pancreas',        x:330, y:402, scale:1,   threshold:90,  depth:1, coveredBy:['stomach'],
+                     fact:'Sits behind the stomach. It secretes digestive enzymes into the duodenum and releases insulin and glucagon to regulate blood sugar.'},
+    spleen:         {name:'Spleen',          x:470, y:235, scale:.8,  threshold:75,  depth:1, coveredBy:[],
+                     fact:'High in the upper-left abdomen, behind the stomach and under the ribs. It filters blood and recycles old red blood cells, and is part of the immune system.'},
+    largeIntestine: {name:'Large intestine', x:295, y:492, scale:.92, threshold:105, depth:1, coveredBy:[],
+                     fact:'Frames the small intestine. It absorbs water and electrolytes, houses gut bacteria, and forms and stores faeces.'},
+    smallIntestine: {name:'Small intestine', x:300, y:520, scale:1,   threshold:95,  depth:2, coveredBy:[],
+                     fact:'Roughly six metres of coiled tube (duodenum, jejunum, ileum) where most nutrient absorption takes place.'},
+    liver:          {name:'Liver',           x:212, y:245, scale:1,   threshold:95,  depth:3, coveredBy:[],
+                     fact:'Fills the upper-right abdomen. It filters blood, makes bile, stores glycogen, and processes nutrients, hormones and drugs.'},
+    stomach:        {name:'Stomach',         x:378, y:250, scale:1,   threshold:90,  depth:3, coveredBy:[],
+                     fact:'Sits in the upper-left abdomen. Its muscular wall churns food with acid and enzymes into a paste (chyme) before releasing it into the small intestine.'},
+    gallbladder:    {name:'Gallbladder',     x:238, y:360, scale:1,   threshold:60,  depth:4, coveredBy:[],
+                     fact:'A small sac tucked under the liver. It stores and concentrates bile, then squeezes it into the duodenum to help digest fats.'}
   };
 
-  // Anatomical stacking order (back to front) so placed organs overlap realistically.
-  const zOrder = ['largeIntestine','smallIntestine','pancreas','stomach','liver','gallbladder'];
+  // Paint order, back to front, so placed organs overlap realistically.
+  const paintOrder = ['kidneys','pancreas','spleen','largeIntestine','smallIntestine','stomach','liver','gallbladder'];
 
   const organOrder = pieces.map(p => p.dataset.organ);
   const pieceById = Object.fromEntries(pieces.map(p => [p.dataset.organ, p]));
@@ -439,6 +491,15 @@
     return a;
   }
 
+  // Test order: deepest organs first (shuffled within each layer) so a covered organ is
+  // always requested before the organ that covers it — the sequence is always solvable.
+  function buildTestQueue() {
+    const byDepth = {};
+    organOrder.forEach(id => { (byDepth[data[id].depth] ??= []).push(id); });
+    return Object.keys(byDepth).sort((a, b) => a - b)
+      .flatMap(d => shuffle(byDepth[d]));
+  }
+
   function updateScore() {
     scoreText.textContent = `${placedCount} / ${pieces.length}`;
     progressBar.style.width = `${(placedCount / pieces.length) * 100}%`;
@@ -453,12 +514,23 @@
   function layoutTray() {
     const active = trayOrder.filter(id => !pieceById[id].classList.contains('placed'));
     const cols = [700, 878];
-    const rows = [200, 400, 596];
+    const rows = [150, 310, 470, 630];
     active.forEach((id, i) => {
       const piece = pieceById[id];
       const home = parseTransformText(startTransforms.get(id));
-      setTransform(piece, cols[i % 2], rows[Math.floor(i / 2)], home.s);
+      setTransform(piece, cols[i % 2], rows[Math.min(Math.floor(i / 2), rows.length - 1)], home.s);
     });
+  }
+
+  // Organs (from data.coveredBy) that lie in front of `id` and are currently placed.
+  function coveringOrgans(id) {
+    return (data[id].coveredBy || []).filter(c => pieceById[c].classList.contains('placed'));
+  }
+
+  function joinNames(ids) {
+    const names = ids.map(i => data[i].name.toLowerCase());
+    if (names.length === 1) return names[0];
+    return names.slice(0, -1).join(', ') + ' and ' + names.slice(-1);
   }
 
   function movePieceToBackOfTray(id) {
@@ -469,11 +541,11 @@
     layoutTray();
   }
 
-  // Keep placed organs in anatomical stacking order.
+  // Keep placed organs in anatomical stacking order (deepest painted first / at the back).
   function restack() {
-    zOrder.forEach(id => {
+    paintOrder.forEach(id => {
       const piece = pieceById[id];
-      if (piece.classList.contains('placed')) pieceGroup.insertBefore(piece, pieceGroup.firstChild);
+      if (piece.classList.contains('placed')) pieceGroup.appendChild(piece);
     });
   }
 
@@ -493,6 +565,9 @@
     clearSelection();
     selected = piece;
     piece.classList.add('selected');
+    // Raise this organ's outline so it stays clickable even where deeper organs are covered.
+    const tgt = targetFor(piece.dataset.organ);
+    if (tgt) targetGroup.appendChild(tgt);
     const d = data[piece.dataset.organ];
     const extra = mode === 'guide'
       ? 'Now drag it into place, or click its matching outline.'
@@ -506,14 +581,31 @@
     if (placed) label.dataset.placed = 'true'; else delete label.dataset.placed;
   }
 
+  // Refuse to place a deep organ while a covering organ is still in the body.
+  function blockedFeedback(piece, covering) {
+    const id = piece.dataset.organ;
+    resetWrongAnimation(piece);
+    covering.forEach(c => resetWrongAnimation(pieceById[c]));
+    returnPieceToTray(piece, false);
+    const list = joinNames(covering);
+    const plural = covering.length > 1;
+    setFeedback(
+      `Remove the ${list} first`,
+      `The ${data[id].name.toLowerCase()} lies deep to the ${list}. Take ${plural ? 'them' : 'it'} out, place the ${data[id].name.toLowerCase()}, then put ${plural ? 'them' : 'it'} back on top.`,
+      'bad'
+    );
+  }
+
   function placePiece(piece) {
     const id = piece.dataset.organ;
+    const covering = coveringOrgans(id);
+    if (covering.length) { blockedFeedback(piece, covering); return; }
     const d = data[id];
     setTransform(piece, d.x, d.y, d.scale);
     piece.classList.remove('selected','wrong');
     piece.classList.add('placed');
-    piece.setAttribute('aria-label', `${d.name}, correctly placed`);
-    piece.setAttribute('tabindex', '-1');
+    piece.setAttribute('aria-label', mode === 'test' ? `${d.name}, correctly placed` : `${d.name}, placed — press Delete to remove`);
+    piece.setAttribute('tabindex', '0');
 
     targetFor(id).classList.add('placed');
     markPlacedLabel(id, true);
@@ -527,6 +619,32 @@
 
     if (mode === 'test') { testIndex++; updateTestPanel(); }
     if (placedCount === pieces.length) completePuzzle();
+  }
+
+  // Take a placed organ back out so deeper organs can be reached.
+  function tryRemove(piece) {
+    if (mode === 'test') {
+      setFeedback('Locked in Test me', 'Organs can’t be removed during a test. Use Reset puzzle to start again.', '');
+      return;
+    }
+    removePiece(piece);
+  }
+
+  function removePiece(piece) {
+    const id = piece.dataset.organ;
+    const d = data[id];
+    piece.classList.remove('placed', 'selected', 'wrong');
+    piece.setAttribute('tabindex', '0');
+    piece.setAttribute('aria-label', `${d.name} puzzle piece`);
+    targetFor(id).classList.remove('placed');
+    markPlacedLabel(id, false);
+    if (!trayOrder.includes(id)) trayOrder.push(id);
+    placedCount = Math.max(0, placedCount - 1);
+    pieceGroup.appendChild(piece);
+    restack();
+    layoutTray();
+    updateScore();
+    setFeedback(`Removed — ${d.name}`, 'It’s back in the tray. You can now reach the organs behind it.', '');
   }
 
   function resetWrongAnimation(el) {
@@ -564,6 +682,8 @@
       clearSelection();
       return;
     }
+    const covering = coveringOrgans(id);
+    if (covering.length) { blockedFeedback(piece, covering); return; }
     const d = data[id];
     const p = parseTransform(piece);
     const dist = Math.hypot(p.x - d.x, p.y - d.y);
@@ -621,7 +741,7 @@
     drag = null;
     clearSelection();
     trayOrder = [...organOrder];
-    testQueue = shuffle(organOrder);
+    testQueue = buildTestQueue();
     testIndex = 0;
 
     pieces.forEach(piece => {
@@ -705,11 +825,16 @@
     });
 
     piece.addEventListener('click', () => {
-      if (!drag && !piece.classList.contains('placed')) selectPiece(piece);
+      if (drag) return;
+      if (piece.classList.contains('placed')) tryRemove(piece);
+      else selectPiece(piece);
     });
 
     piece.addEventListener('keydown', e => {
-      if (piece.classList.contains('placed')) return;
+      if (piece.classList.contains('placed')) {
+        if (['Enter', ' ', 'Delete', 'Backspace'].includes(e.key)) { e.preventDefault(); tryRemove(piece); }
+        return;
+      }
       if (mode === 'test' && piece.dataset.organ !== currentTestId() &&
           ['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
         e.preventDefault();
