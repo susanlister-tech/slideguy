@@ -66,16 +66,17 @@
     display: grid;
     gap: 16px;
     align-items: start;
-    grid-template-columns: minmax(0,1fr) 300px 300px;
+    grid-template-columns: minmax(0,1fr) 330px;
     grid-template-areas:
-      "board mode controls"
-      "info  .    .";
+      "board side"
+      "info  .";
   }
   .board-wrap { grid-area: board; }
-  .mode-col { grid-area: mode; display: grid; gap: 12px; align-content: start; }
-  .mode-col .test-current { margin-top: 0; }
-  /* Controls fills the row so its bottom lines up with the bottom of the board */
-  .controls-card { grid-area: controls; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+  /* Mode + controls share one column; controls is pushed to the bottom so it
+     lines up with the bottom of the board, with Place this next under the mode card. */
+  .side-col { grid-area: side; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-width: 0; }
+  .side-top { display: flex; flex-direction: column; gap: 12px; }
+  .side-top .test-current { margin-top: 0; }
   .controls-card h2 { margin-bottom: 12px; }
   #feedbackBox { grid-area: info; }
 
@@ -215,24 +216,14 @@
   @keyframes targetPulse { 0%,100% { opacity: .3; } 50% { opacity: .85; } }
 
   /* Two columns: board / how-to / info stack on the left, mode + controls on the right */
-  @media(max-width:1200px) {
-    .layout {
-      grid-template-columns: minmax(0,1fr) 320px;
-      grid-template-areas:
-        "board mode"
-        "board controls"
-        "info  info";
-    }
-    .controls-card { align-self: start; justify-content: flex-start; }
-  }
   /* Single column stack */
   @media(max-width:820px) {
     .layout {
       grid-template-columns: 1fr;
-      grid-template-areas: "board" "mode" "controls" "info";
+      grid-template-areas: "board" "side" "info";
     }
     #puzzleSvg { max-height: none; }
-    .controls-card { align-self: start; justify-content: flex-start; }
+    .side-col { align-self: start; justify-content: flex-start; }
   }
   @media(max-width:640px) {
     .app { padding: 12px; }
@@ -436,30 +427,32 @@
       </svg>
     </section>
 
-    <div class="mode-col">
-      <section class="card modes-card">
-        <h2>Choose a mode</h2>
-        <div class="mode-buttons" role="group" aria-label="Puzzle mode">
-          <button id="modeGuide" class="mode-btn active" type="button"><strong>Guide me</strong><small>Outlines stay visible and the Hint button glows the correct spot.</small></button>
-          <button id="modeConfident" class="mode-btn" type="button"><strong>I’m confident</strong><small>No outlines. Place every organ from memory.</small></button>
-          <button id="modeTest" class="mode-btn" type="button"><strong>Test me</strong><small>No outlines. Place the named organ; wrong picks go to the back of the tray.</small></button>
+    <aside class="side-col">
+      <div class="side-top">
+        <section class="card modes-card">
+          <h2>Choose a mode</h2>
+          <div class="mode-buttons" role="group" aria-label="Puzzle mode">
+            <button id="modeGuide" class="mode-btn active" type="button"><strong>Guide me</strong><small>Outlines stay visible and the Hint button glows the correct spot.</small></button>
+            <button id="modeConfident" class="mode-btn" type="button"><strong>I’m confident</strong><small>No outlines. Place every organ from memory.</small></button>
+            <button id="modeTest" class="mode-btn" type="button"><strong>Test me</strong><small>No outlines. Place the named organ; wrong picks go to the back of the tray.</small></button>
+          </div>
+        </section>
+        <div class="test-current" id="testPanel" aria-live="polite">
+          <div class="label">Place this next</div>
+          <div class="value" id="testCurrent">—</div>
+        </div>
+      </div>
+
+      <section class="card controls-card">
+        <h2>Controls</h2>
+        <div class="controls" role="group" aria-label="Puzzle controls">
+          <button id="hintBtn" type="button">Show hint</button>
+          <button id="labelsBtn" type="button">Show labels</button>
+          <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
+          <button id="resetBtn" class="wide primary" type="button">Reset puzzle</button>
         </div>
       </section>
-      <div class="test-current" id="testPanel" aria-live="polite">
-        <div class="label">Place this next</div>
-        <div class="value" id="testCurrent">—</div>
-      </div>
-    </div>
-
-    <section class="card controls-card">
-      <h2>Controls</h2>
-      <div class="controls" role="group" aria-label="Puzzle controls">
-        <button id="hintBtn" type="button">Show hint</button>
-        <button id="labelsBtn" type="button">Show labels</button>
-        <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
-        <button id="resetBtn" class="wide primary" type="button">Reset puzzle</button>
-      </div>
-    </section>
+    </aside>
 
     <section class="card feedback" id="feedbackBox" aria-live="polite">
       <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
