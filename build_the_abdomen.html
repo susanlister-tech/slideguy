@@ -65,8 +65,28 @@
     box-shadow: var(--shadow);
     overflow: hidden;
     position: relative;
+    display: flex;
+    justify-content: center;
   }
-  #puzzleSvg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  /* Keep the play area from getting so tall it pushes the side panel off-screen */
+  #puzzleSvg { display: block; width: 100%; height: auto; max-height: 78vh; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+  /* Organ key: a small button inside the tray that opens a popover */
+  .key-btn { cursor: pointer; }
+  .key-btn rect { fill: #ffffff; stroke: #c9d9df; stroke-width: 2; transition: fill .15s ease, stroke .15s ease; }
+  .key-btn:hover rect, .key-btn:focus-visible rect { fill: #e3eef1; stroke: #0a7385; }
+  .key-btn:focus-visible { outline: none; }
+  .key-btn text { font-family: "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 800; fill: #0a7385; text-anchor: middle; dominant-baseline: central; }
+  .key-popover {
+    position: absolute; top: 16px; right: 16px; width: 292px; max-width: calc(100% - 32px);
+    background: #fff; border: 1px solid rgba(23,35,58,.14); border-radius: 16px;
+    box-shadow: 0 18px 44px rgba(20,44,64,.26); padding: 14px 16px; z-index: 5;
+  }
+  .key-popover[hidden] { display: none; }
+  .key-popover-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .key-popover-head strong { font-size: 1rem; }
+  .key-close { background: none; box-shadow: none; min-height: 0; padding: 0 8px; font-size: 1.4rem; line-height: 1; color: var(--muted); }
+  .key-close:hover { transform: none; box-shadow: none; color: var(--ink); }
 
   .side { display: grid; gap: 14px; }
   .card {
@@ -106,16 +126,20 @@
   button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
   .feedback {
-    min-height: 118px;
+    min-height: 96px;
+    margin-top: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background: #f4f8fa;
+    border: 1px solid #e0eaee;
     border-left: 5px solid #b8c8d0;
-    padding-left: 14px;
+    border-radius: 12px;
+    padding: 11px 13px;
   }
-  .feedback.good { border-color: var(--good); }
-  .feedback.bad { border-color: var(--bad); }
-  .feedback-title { font-size: 1.03rem; font-weight: 900; margin: 0 0 5px; }
+  .feedback.good { border-left-color: var(--good); background: #eef7f2; }
+  .feedback.bad { border-left-color: var(--bad); background: #fbeff0; }
+  .feedback-title { font-size: 1.02rem; font-weight: 900; margin: 0 0 5px; }
   .feedback-text { font-size: .9rem; line-height: 1.5; color: #4f5f74; margin: 0; }
 
   .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: .82rem; color: #4f5f74; }
@@ -204,6 +228,23 @@
 
   <main class="layout">
     <section class="board-wrap" aria-label="Interactive digestive organ puzzle">
+      <div id="keyPopover" class="key-popover" role="dialog" aria-label="Organ colour key" hidden>
+        <div class="key-popover-head">
+          <strong>Organ key</strong>
+          <button id="keyClose" class="key-close" type="button" aria-label="Close organ key">&times;</button>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#71714f"></i>Liver</span>
+          <span><i class="dot" style="background:#c33a2c"></i>Stomach</span>
+          <span><i class="dot" style="background:#3f7a35"></i>Gallbladder</span>
+          <span><i class="dot" style="background:#caa268"></i>Pancreas</span>
+          <span><i class="dot" style="background:#5e3c58"></i>Spleen</span>
+          <span><i class="dot" style="background:#74483b"></i>Kidneys</span>
+          <span><i class="dot" style="background:#a63a34"></i>Small intestine</span>
+          <span><i class="dot" style="background:#d5863b"></i>Large intestine</span>
+        </div>
+        <p class="source">Educational adaptation of a 3D-printed plastic anatomy model of the abdominal digestive organs.</p>
+      </div>
       <svg id="puzzleSvg" viewBox="0 0 980 760" role="application" aria-label="Drag digestive organ pieces from the tray into their correct positions">
         <defs>
           <linearGradient id="bodyGradient" x1="0" y1="0" x2="0" y2="1">
@@ -314,6 +355,10 @@
         <rect x="600" y="24" width="356" height="712" rx="22" class="tray-panel"/>
         <text x="628" y="64" class="tray-title">Organ tray</text>
         <text x="628" y="88" class="tray-subtitle">Drag a piece, or Tab + arrow keys</text>
+        <g id="keyBtn" class="key-btn" role="button" tabindex="0" aria-label="Show the organ colour key" aria-expanded="false">
+          <rect x="852" y="44" width="90" height="34" rx="17"/>
+          <text x="897" y="61">Key</text>
+        </g>
 
         <!-- Ghost outlines (visible in Guide me). Deep organs are placed last here so their
              faint outline stays clickable on top of the superficial organs that cover them. -->
@@ -365,10 +410,6 @@
           <button id="modeConfident" class="mode-btn" type="button"><strong>I’m confident</strong><small>No outlines. Place every organ from memory.</small></button>
           <button id="modeTest" class="mode-btn" type="button"><strong>Test me</strong><small>No outlines. Place the named organ; wrong picks go to the back of the tray.</small></button>
         </div>
-        <div class="test-current" id="testPanel" aria-live="polite">
-          <div class="label">Place this next</div>
-          <div class="value" id="testCurrent">—</div>
-        </div>
       </section>
 
       <section class="card">
@@ -379,26 +420,14 @@
           <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
           <button id="resetBtn" class="wide primary">Reset puzzle</button>
         </div>
-      </section>
-
-      <section class="card feedback" id="feedbackBox" aria-live="polite">
-        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
-        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
-      </section>
-
-      <section class="card">
-        <h2>Organ key</h2>
-        <div class="legend">
-          <span><i class="dot" style="background:#71714f"></i>Liver</span>
-          <span><i class="dot" style="background:#c33a2c"></i>Stomach</span>
-          <span><i class="dot" style="background:#3f7a35"></i>Gallbladder</span>
-          <span><i class="dot" style="background:#caa268"></i>Pancreas</span>
-          <span><i class="dot" style="background:#5e3c58"></i>Spleen</span>
-          <span><i class="dot" style="background:#74483b"></i>Kidneys</span>
-          <span><i class="dot" style="background:#a63a34"></i>Small intestine</span>
-          <span><i class="dot" style="background:#d5863b"></i>Large intestine</span>
+        <div class="test-current" id="testPanel" aria-live="polite">
+          <div class="label">Place this next</div>
+          <div class="value" id="testCurrent">—</div>
         </div>
-        <p class="source">Educational adaptation of a 3D-printed plastic anatomy model of the abdominal digestive organs.</p>
+        <div class="feedback" id="feedbackBox" aria-live="polite">
+          <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
+          <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+        </div>
       </section>
     </aside>
   </main>
@@ -500,13 +529,12 @@
     return a;
   }
 
-  // Test order: deepest organs first (shuffled within each layer) so a covered organ is
-  // always requested before the organ that covers it — the sequence is always solvable.
+  // Test order: build from the lower / foundation organs upward. This keeps every covered
+  // organ (kidneys, pancreas) requested before the organ that covers it, so the student is
+  // never asked for something they can't yet place.
+  const testOrder = ['largeIntestine','smallIntestine','kidneys','pancreas','spleen','liver','stomach','gallbladder'];
   function buildTestQueue() {
-    const byDepth = {};
-    organOrder.forEach(id => { (byDepth[data[id].depth] ??= []).push(id); });
-    return Object.keys(byDepth).sort((a, b) => a - b)
-      .flatMap(d => shuffle(byDepth[d]));
+    return [...testOrder];
   }
 
   function updateScore() {
@@ -800,6 +828,23 @@
     if (peelOn) setFeedback('Peel view on', 'The liver, stomach, gallbladder and small intestine are faded so the deep organs (kidneys, pancreas, spleen) behind them show through.', '');
     else setFeedback('Peel view off', 'All layers are shown at full strength again.', '');
   }
+
+  // Organ key popover (opened from the button inside the tray)
+  const keyBtn = document.getElementById('keyBtn');
+  const keyPopover = document.getElementById('keyPopover');
+  const keyClose = document.getElementById('keyClose');
+  function toggleKey(force) {
+    const open = force !== undefined ? force : keyPopover.hidden;
+    keyPopover.hidden = !open;
+    keyBtn.setAttribute('aria-expanded', String(open));
+    if (open) keyClose.focus();
+  }
+  keyBtn.addEventListener('click', () => toggleKey());
+  keyBtn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleKey(); }
+  });
+  keyClose.addEventListener('click', () => { toggleKey(false); keyBtn.focus(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !keyPopover.hidden) { toggleKey(false); keyBtn.focus(); } });
 
   hintBtn.onclick = handleHint;
   labelsBtn.onclick = handleLabelsToggle;
