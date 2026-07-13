@@ -63,8 +63,8 @@
     grid-template-columns: minmax(240px,300px) minmax(0,1fr) minmax(300px,330px);
   }
   .left-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .mid-col  { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   .intro-card { display: flex; flex-direction: column; }
-  .intro-card .subtitle { flex: 1; }
   .side-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   /* The gap for "Place this next" only exists when Test me is chosen */
   .side-col .test-current { margin-top: 0; }
@@ -81,7 +81,7 @@
     justify-content: center;
   }
   /* Keep the play area from getting so tall it pushes the side panel off-screen */
-  #puzzleSvg { display: block; width: 100%; height: auto; max-height: 82vh; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #puzzleSvg { display: block; width: 100%; height: auto; max-height: 68vh; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
 
   /* Organ key: a small button inside the tray that opens a popover */
   .key-btn { cursor: pointer; }
@@ -208,23 +208,23 @@
   @keyframes pieceShake { 0%,100% { transform: translate(0,0); } 25% { transform: translate(-9px,0); } 75% { transform: translate(9px,0); } }
   @keyframes targetPulse { 0%,100% { opacity: .3; } 50% { opacity: .85; } }
 
-  /* Two columns on medium screens: board on the right, intro/info + mode/controls on the left */
+  /* Two columns on medium screens: board + info on the right, intro/controls + mode on the left */
   @media(max-width:1100px) {
     .layout {
       grid-template-columns: minmax(280px,360px) minmax(0,1fr);
       grid-template-areas:
-        "left board"
-        "side board";
+        "left mid"
+        "side mid";
       align-items: start;
     }
-    .board-wrap { grid-area: board; }
-    .left-col   { grid-area: left; }
-    .side-col   { grid-area: side; }
-    #puzzleSvg { max-height: 82vh; }
+    .left-col { grid-area: left; }
+    .mid-col  { grid-area: mid; }
+    .side-col { grid-area: side; }
+    #puzzleSvg { max-height: 74vh; }
   }
   /* Single column stack */
   @media(max-width:760px) {
-    .layout { grid-template-columns: 1fr; grid-template-areas: "left" "board" "side"; }
+    .layout { grid-template-columns: 1fr; grid-template-areas: "mid" "left" "side"; }
     #puzzleSvg { max-height: none; }
   }
   @media(max-width:640px) {
@@ -251,12 +251,18 @@
           </div>
         </div>
       </section>
-      <section class="card feedback" id="feedbackBox" aria-live="polite">
-        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
-        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+      <section class="card controls-card">
+        <h2>Controls</h2>
+        <div class="controls" role="group" aria-label="Puzzle controls">
+          <button id="hintBtn" type="button">Show hint</button>
+          <button id="labelsBtn" type="button">Show labels</button>
+          <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
+          <button id="resetBtn" class="wide primary" type="button">Reset puzzle</button>
+        </div>
       </section>
     </div>
 
+    <div class="mid-col">
     <section class="board-wrap" aria-label="Interactive digestive organ puzzle">
       <div id="keyPopover" class="key-popover" role="dialog" aria-label="Organ colour key" hidden>
         <div class="key-popover-head">
@@ -430,6 +436,11 @@
         <g id="confetti" class="confetti"></g>
       </svg>
     </section>
+      <section class="card feedback" id="feedbackBox" aria-live="polite">
+        <p class="feedback-title" id="feedbackTitle">Ready to build?</p>
+        <p class="feedback-text" id="feedbackText">Choose a mode and start placing the digestive organs.</p>
+      </section>
+    </div>
 
     <aside class="side-col">
       <section class="card modes-card">
@@ -444,16 +455,6 @@
         <div class="label">Place this next</div>
         <div class="value" id="testCurrent">—</div>
       </div>
-
-      <section class="card controls-card">
-        <h2>Controls</h2>
-        <div class="controls" role="group" aria-label="Puzzle controls">
-          <button id="hintBtn" type="button">Show hint</button>
-          <button id="labelsBtn" type="button">Show labels</button>
-          <button id="peelBtn" class="wide" type="button" aria-pressed="false">Peel top layers</button>
-          <button id="resetBtn" class="wide primary" type="button">Reset puzzle</button>
-        </div>
-      </section>
     </aside>
   </main>
 </div>
